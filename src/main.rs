@@ -9,10 +9,13 @@ mod graph;
 fn main() {
     let file_path = Path::new("facebook_combined.txt");
     
-    match read_graph_from_file(file_path){
+    match read_graph_from_file(file_path) {
         Ok(graph) => {
-            let average_distances = &graph;
-            println!("The average distance between all nodes {}", distances);
+            let average_distances = calculate_average_distance(&graph);
+            println!("The average distance between all nodes {}", average_distances);
+        }
+        Err(error) => {
+            println!("Error: {}", error);
         }
     }
 }

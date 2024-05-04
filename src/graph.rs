@@ -39,6 +39,10 @@ impl Graph {
         self.vertices.len()
     }
 
+    pub fn get_vertices(&self) -> &Vec<usize> {
+        &self.vertices
+    }
+
     //finds neighbors of vertex in graph
     pub fn get_neighbors(&self, vertex: usize) -> Vec<usize> {
         //checks if vertex exists in adj list
