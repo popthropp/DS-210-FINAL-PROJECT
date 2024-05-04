@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Debug,PartialEq)]
 pub struct Graph {
     vertices: Vec<usize>, //stores vertex id's
     adjacency_list: HashMap<usize, Vec<usize>>,  
@@ -33,12 +34,7 @@ impl Graph {
         //adds vertex to into adjacency list of vertex from
         self.adjacency_list.entry(from).or_insert(Vec::new()).push(to);
     }
-
-    //finds amount of vertices
-    pub fn vertex_count(&self) -> usize {
-        self.vertices.len()
-    }
-
+    
     pub fn get_vertices(&self) -> &Vec<usize> {
         &self.vertices
     }
