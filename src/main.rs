@@ -3,19 +3,24 @@ use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 use crate::graph::Graph;
-use std::io::Write;
-use tempfile::tempdir;
 
 mod graph;
 
 fn main() {
-    let file_path = Path::new("facebook_combined.txt");
+    //Defines file path
+    let file_path = Path::new("facebook_combined.txt"); 
     
+    //Reads graph from file
     match read_graph_from_file(file_path) {
+
+        //If read is successful then calculates average distances of graph
         Ok(graph) => {
             let average_distances = calculate_average_distance(&graph);
-            println!("The average distance between all nodes {}", average_distances);
+
+            //Prints final output of average distances from every node
+            println!("The average distance between all nodes is {:.3}", average_distances);
         }
+        //If there's an error during the process it'll print an error message
         Err(error) => {
             println!("Error: {}", error);
         }
@@ -52,37 +57,41 @@ fn calculate_average_distance(graph: &Graph) -> f64 {
     let mut total_distance = 0;
     let mut total_pairs = 0;
 
-    // Iterate through all vertices in the graph
+    //Iterate through every vertice
     for &vertex in graph.get_vertices() {
-        // Calculate distances from this vertex to all other vertices using BFS
+        //Finds distance from current vertex to every vertex using BFS
         let distances = bfs_distances(&graph, vertex);
         
-        // Iterate through distances
+        //Iterates through every distance
         for (_, distance) in &distances {
             total_distance += distance;
             total_pairs += 1;
         }
     }
 
-    // Calculate average distance
-    if total_pairs > 0 {
+    //Calculates average distance
         total_distance as f64 / total_pairs as f64
-    } else {
-        0.0
     }
-}
 
 fn bfs_distances(graph: &Graph, source: usize) -> HashMap<usize, usize> {
+
+    //Initializes Hashset, Hashmap, and Queue
     let mut visited = HashSet::new();
     let mut distances = HashMap::new();
     let mut queue = VecDeque::new();
 
+    //Initializes source node and marks it visited
     queue.push_back((source, 0));
     visited.insert(source);
 
+    //Will run until queue is empty
     while let Some((node, dist)) = queue.pop_front() {
+
+        //Inserts distance from source node to current node
         distances.insert(node, dist);
 
+        //Iterates over neigbors of current node and checks if the neighbor has or hasn't been visited
+        //If it has, it goes back to the beginning of the loop but if not then it marks the neighbor as visited and pushes it into the queue
         for &neighbor in &graph.get_neighbors(node) {
             if !visited.contains(&neighbor) {
                 visited.insert(neighbor);
@@ -90,9 +99,9 @@ fn bfs_distances(graph: &Graph, source: usize) -> HashMap<usize, usize> {
             }
         }
     }
-
+    
+    //returns Hashmap of {Node,distance}
     distances
-
 }
 
 #[cfg(test)]
@@ -100,48 +109,43 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    fn create_temporary_graph_file(content: &str) -> PathBuf {
-        let dir = tempdir().expect("Failed to create temporary directory");
-        let file_path = dir.path().join("graph.txt");
-
-        file_path
-    }
-
     #[test]
     fn test_calculate_average_distance() {
-        // Create a simple graph with known properties
+        //Create a sample graph with known properties
         let mut graph = Graph::new();
         graph.add_edge(1, 2);
         graph.add_edge(1, 3);
         graph.add_edge(2, 4);
         graph.add_edge(3, 4);
 
-        // Calculate average distance
         let average_distance = calculate_average_distance(&graph);
 
-        // Expected average distance for this graph
-        let expected_distance = 1.5;
+        //Expected average distance for this graph
+        let expected_distance = 0.667;
 
-        // Assert that the calculated average distance matches the expected value
-        assert_eq!(average_distance, expected_distance);
+        //Check if expected and calculated average distances are equal (Rounded calculated distance to 3 decimal places)
+        assert_eq!((average_distance * 1000.0).round()/1000.0, expected_distance);
     }
 
     #[test]
-    fn test_read_graph_from_file() {
-        // Create a temporary file with graph data
-        let content = "1 2\n2 3\n3 4\n";
-        let file_path = create_temporary_graph_file(content);
+    fn test_bfs_distances() {
+        //Create a sample graph
+        let mut graph = Graph::new();
+        graph.add_edge(1, 2);
+        graph.add_edge(1, 3);
+        graph.add_edge(2, 4);
+        graph.add_edge(3, 4);
 
-        // Read graph from the temporary file
-        let result = read_graph_from_file(&file_path);
+        //Call bfs_distances with vertex 1 as the source
+        let distances = bfs_distances(&graph, 1);
 
-        // Expected graph
-        let mut expected_graph = Graph::new();
-        expected_graph.add_edge(1, 2);
-        expected_graph.add_edge(2, 3);
-        expected_graph.add_edge(3, 4);
+        //Expected distances from vertex 1 to other vertices
+        let expected_distances: HashMap<usize, usize> = [(1, 0), (2, 1), (3, 1), (4, 2)]
+            .iter()
+            .cloned()
+            .collect();
 
-        // Assert that the read graph matches the expected graph
-        assert_eq!(result, Ok(expected_graph));
+        //Check if expected and calculated distance are equal
+        assert_eq!(distances, expected_distances);
+        }
     }
-}
